@@ -9,10 +9,12 @@ st.set_page_config(
 )
 
 # Inicialização do cliente OpenAI apontando para a API do Gemini
+
 modelo_ia = OpenAI(
-    api_key="AQ.Ab8RN6KDFY69tuQ8kVX342B8SQEIcUtAea4C3aRkQnR1GDc6eg",
+    api_key=st.secrets["OPENAI_API_KEY"],
     base_url="https://generativelanguage.googleapis.com/v1beta/openai"
 )
+
 
 # --- BARRA LATERAL (STATUS, CONTADOR, OPÇÕES E HUMOR) ---
 with st.sidebar:
