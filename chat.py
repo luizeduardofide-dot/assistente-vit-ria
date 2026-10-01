@@ -110,7 +110,7 @@ if mensage_usuario:
     with st.spinner("A Vitória está a digitar... 💭"):
         resposta_modelo = modelo_ia.chat.completions.create(
             messages=mensagens_completas_ia,
-            model="gemini-flash-lite-latest"
+            model="gemini-1.5-flash"
         )
         resposta_ia = resposta_modelo.choices[0].message.content
 
