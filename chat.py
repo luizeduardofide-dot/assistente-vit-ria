@@ -60,9 +60,9 @@ elif "Brava" in humor_escolhido:
 else:
     instrucao_humor = "Você se chama Vitória. Você está focada em ser a maior torcedora do usuário, dando conselhos motivacionais, muita força e apoio incondicional. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 
-# Inicializa o modelo correto com a instrução do sistema correspondente ao humor
+# Inicializa o modelo correto recomendado pela API (`gemini-3.8-flash`)
 model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
+    model_name="gemini-3.8-flash",
     system_instruction=instrucao_humor
 )
 
