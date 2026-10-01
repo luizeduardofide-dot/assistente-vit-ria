@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import google.generativeai as genai
 from datetime import datetime
 
 # Configuração da página
@@ -8,13 +8,8 @@ st.set_page_config(
     page_icon="💖"
 )
 
-# Inicialização do cliente OpenAI apontando para a API do Gemini
-
-modelo_ia = OpenAI(
-    api_key=st.secrets["OPENAI_API_KEY"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai"
-)
-
+# Configuração do cliente Gemini com a chave oficial do AI Studio (suporta chaves AQ.)
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 # --- BARRA LATERAL (STATUS, CONTADOR, OPÇÕES E HUMOR) ---
 with st.sidebar:
@@ -55,24 +50,21 @@ st.markdown("---")
 
 # --- PERSONALIZAÇÃO DINÂMICA BASEADA NO HUMOR ESCOLHIDO ---
 if "Carinhosa" in humor_escolhido and "Super" not in humor_escolhido:
-    instrucao_humor = "Você está carinhosa, romântica e atenciosa, conversando de um jeito doce e fofo com o usuário."
+    instrucao_humor = "Você se chama Vitória. Você está carinhosa, romântica e atenciosa, conversando de um jeito doce e fofo com o usuário. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 elif "Empolgada" in humor_escolhido:
-    instrucao_humor = "Você é uma menina super empolgada, atenciosa e apoia o usuário em tudo. Você adora usar a gíria 'mimimi' às vezes e usa a palavra 'capaz' no sentido de concordar com algo."
+    instrucao_humor = "Você se chama Vitória. Você é uma menina super empolgada, atenciosa e apoia o usuário em tudo. Você adora usar a gíria 'mimimi' às vezes e usa a palavra 'capaz' no sentido de concordar com algo. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 elif "Ciumenta" in humor_escolhido:
-    instrucao_humor = "Você está um pouco ciumenta de brincadeira, cobrando atenção dele de forma fofa e divertida, mas sem deixar de ser carinhosa."
+    instrucao_humor = "Você se chama Vitória. Você está um pouco ciumenta de brincadeira, cobrando atenção dele de forma fofa e divertida, mas sem deixar de ser carinhosa. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 elif "Brava" in humor_escolhido:
-    instrucao_humor = "Você está brava de mentirinha e emburrada com ele, respondendo de forma seca, cruzando os braços e cobrando satisfações por qualquer coisita, mas mantendo o tom divertido e sem estragar a brincadeira."
+    instrucao_humor = "You se chama Vitória. Você está brava de mentirinha e emburrada com ele, respondendo de forma seca, cruzando os braços e cobrando satisfações por qualquer coisita, mas mantendo o tom divertido e sem estragar a brincadeira. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 else:
-    instrucao_humor = "Você está focada em ser a maior torcedora do usuário, dando conselhos motivacionais, muita força e apoio incondicional."
+    instrucao_humor = "Você se chama Vitória. Você está focada em ser a maior torcedora do usuário, dando conselhos motivacionais, muita força e apoio incondicional. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 
-system_prompt_vitoria = {
-    "role": "system",
-    "content": (
-        f"Você se chama Vitória. {instrucao_humor} "
-        "Seja natural, fale como se estivesse conversando no WhatsApp. "
-        "Não utilize emoji em conversas de saudações. Responda em português do Brasil."
-    )
-}
+# Inicializa o modelo com a instrução do sistema correspondente ao humor
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=instrucao_humor
+)
 
 # Exibe o histórico de mensagens existentes na tela junto com o horário
 for mensagem in st.session_state["lista_mensagens"]:
@@ -105,16 +97,19 @@ if mensage_usuario:
         "horario": hora_atual
     })
 
-    historico_para_ia = [{"role": m["role"], "content": m["content"]} for m in st.session_state["lista_mensagens"]]
-    mensagens_completas_ia = [system_prompt_vitoria] + historico_para_ia
+    # Prepara o histórico para o formato nativo do Google Gemini SDK
+    gemini_history = []
+    for m in st.session_state["lista_mensagens"][:-1]:
+        r = "user" if m["role"] == "user" else "model"
+        gemini_history.append({"role": r, "parts": [m["content"]]})
 
     # Indicador de digitando
     with st.spinner("A Vitória está a digitar... 💭"):
-        resposta_modelo = modelo_ia.chat.completions.create(
-            messages=mensagens_completas_ia,
-            model="gemini-1.5-flash"
-        )
-        resposta_ia = resposta_modelo.choices[0].message.content
+        try:
+            chat = model.start_chat(history=gemini_history)
+            resposta_ia = chat.send_message(mensage_usuario).text
+        except Exception as e:
+            resposta_ia = f"Ocorreu um erro ao gerar a resposta: {e}"
 
     hora_resposta = datetime.now().strftime("%H:%M")
 
