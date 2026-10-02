@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from openai import OpenAI
 from datetime import datetime
 
 # Configuração da página
@@ -8,8 +8,11 @@ st.set_page_config(
     page_icon="💖"
 )
 
-# Configuração do cliente Gemini usando os segredos do Streamlit
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+# Configuração do cliente usando o endpoint oficial do Google Gemini compatível com OpenAI
+client = OpenAI(
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    api_key=st.secrets["GEMINI_API_KEY"],
+)
 
 # --- BARRA LATERAL (STATUS, CONTADOR, OPÇÕES E HUMOR) ---
 with st.sidebar:
@@ -58,12 +61,6 @@ elif "Brava" in humor_escolhido:
 else:
     instrucao_humor = "Você se chama Vitória. Você está focada em ser a maior torcedora do usuário, dando conselhos motivacionais, muita força e apoio incondicional. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 
-# Inicializa o modelo oficial atualizado do Gemini
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash-latest",
-    system_instruction=instrucao_humor
-)
-
 # Exibe o histórico de mensagens existentes na tela junto com o horário
 for mensagem in st.session_state["lista_mensagens"]:
     role = mensagem["role"]
@@ -95,17 +92,21 @@ if mensage_usuario:
         "horario": hora_atual
     })
 
-    # Prepara o histórico para o formato do Gemini
-    gemini_history = []
-    for m in st.session_state["lista_mensagens"][:-1]:
-        r = "user" if m["role"] == "user" else "model"
-        gemini_history.append({"role": r, "parts": [m["content"]]})
+    # Prepara o histórico incluindo a system instruction no formato padrão
+    mensagens_gemini = [{"role": "system", "content": instrucao_humor}]
+    for m in st.session_state["lista_mensagens"]:
+        r = "user" if m["role"] == "user" else "assistant"
+        mensagens_gemini.append({"role": r, "content": m["content"]})
 
     # Indicador de a digitar
     with st.spinner("A Vitória está a digitar... 💭"):
         try:
-            chat = model.start_chat(history=gemini_history)
-            resposta_ia = chat.send_message(mensage_usuario).text
+            response = client.chat.completions.create(
+                model="gemini-1.5-flash",
+                messages=mensagens_gemini,
+                temperature=0.7,
+            )
+            resposta_ia = response.choices[0].message.content
         except Exception as e:
             resposta_ia = f"Ocorreu um erro ao gerar a resposta: {e}"
 
