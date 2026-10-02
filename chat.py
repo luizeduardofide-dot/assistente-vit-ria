@@ -1,5 +1,5 @@
 import streamlit as st
-from groq import Groq
+from openai import OpenAI
 from datetime import datetime
 
 # Configuração da página
@@ -8,8 +8,11 @@ st.set_page_config(
     page_icon="💖"
 )
 
-# Configuração do cliente Groq usando os segredos do Streamlit
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+# Configuração do cliente OpenRouter usando os segredos do Streamlit
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=st.secrets["OPENROUTER_API_KEY"],
+)
 
 # --- BARRA LATERAL (STATUS, CONTADOR, OPÇÕES E HUMOR) ---
 with st.sidebar:
@@ -89,21 +92,21 @@ if mensage_usuario:
         "horario": hora_atual
     })
 
-    # Prepara o histórico para o formato da Groq (incluindo o system prompt no início)
-    mensagens_groq = [{"role": "system", "content": instrucao_humor}]
+    # Prepara o histórico para o formato do OpenRouter (incluindo o system prompt)
+    mensagens_openrouter = [{"role": "system", "content": instrucao_humor}]
     for m in st.session_state["lista_mensagens"]:
         r = "user" if m["role"] == "user" else "assistant"
-        mensagens_groq.append({"role": r, "content": m["content"]})
+        mensagens_openrouter.append({"role": r, "content": m["content"]})
 
     # Indicador de a digitar
     with st.spinner("A Vitória está a digitar... 💭"):
         try:
-            chat_completion = client.chat.completions.create(
-                model="openai/gpt-oss-120b",
-                messages=mensagens_groq,
+            completion = client.chat.completions.create(
+                model="deepseek/deepseek-chat:free",
+                messages=mensagens_openrouter,
                 temperature=0.7,
             )
-            resposta_ia = chat_completion.choices[0].message.content
+            resposta_ia = completion.choices[0].message.content
         except Exception as e:
             resposta_ia = f"Ocorreu um erro ao gerar a resposta: {e}"
 
