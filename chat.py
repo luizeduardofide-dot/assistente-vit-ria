@@ -58,9 +58,9 @@ elif "Brava" in humor_escolhido:
 else:
     instrucao_humor = "Você se chama Vitória. Você está focada em ser a maior torcedora do usuário, dando conselhos motivacionais, muita força e apoio incondicional. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 
-# Inicializa o modelo oficial do Gemini
+# Inicializa o modelo oficial atualizado do Gemini
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-1.5-flash-latest",
     system_instruction=instrucao_humor
 )
 
