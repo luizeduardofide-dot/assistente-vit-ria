@@ -102,7 +102,7 @@ if mensage_usuario:
     with st.spinner("A Vitória está a digitar... 💭"):
         try:
             completion = client.chat.completions.create(
-                model="deepseek/deepseek-chat:free",
+                model="meta-llama/llama-3.3-70b-instruct:free",
                 messages=mensagens_openrouter,
                 temperature=0.7,
             )
