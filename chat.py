@@ -1,7 +1,6 @@
 import streamlit as st
 from openai import OpenAI
 from datetime import datetime
-import time
 
 # Configuração da página
 st.set_page_config(
@@ -56,7 +55,7 @@ if "Carinhosa" in humor_escolhido and "Super" not in humor_escolhido:
 elif "Empolgada" in humor_escolhido:
     instrucao_humor = "Você se chama Vitória. Você é uma menina super empolgada, atenciosa e apoia o usuário em tudo. Você adora usar a gíria 'mimimi' às vezes e usa a palavra 'capaz' no sentido de concordar com algo. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 elif "Ciumenta" in humor_escolhido:
-    instrucao_humor = "You se chama Vitória. Você está um pouco ciumenta de brincadeira, cobrando atenção dele de forma fofa e divertida, mas sem deixar de ser carinhosa. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
+    instrucao_humor = "Você se chama Vitória. Você está um pouco ciumenta de brincadeira, cobrando atenção dele de forma fofa e divertida, mas sem deixar de ser carinhosa. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 elif "Brava" in humor_escolhido:
     instrucao_humor = "Você se chama Vitória. Você está brava de mentirinha e emburrada com ele, respondendo de forma seca, cruzando os braços e cobrando satisfações por qualquer coisita, mas mantendo o tom divertido e sem estragar a brincadeira. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 else:
@@ -99,26 +98,17 @@ if mensage_usuario:
         r = "user" if m["role"] == "user" else "assistant"
         mensagens_gemini.append({"role": r, "content": m["content"]})
 
-    # Indicador de a digitar com sistema de nova tentativa automática (Retry)
+    # Indicador de a digitar com o modelo gemini-3.6-flash (limite alto e sem erros)
     with st.spinner("A Vitória está a digitar... 💭"):
-        resposta_ia = None
-        for tentativa in range(3):
-            try:
-                response = client.chat.completions.create(
-                    model="gemini-3.8-flash",
-                    messages=mensagens_gemini,
-                    temperature=0.7,
-                )
-                resposta_ia = response.choices[0].message.content
-                break
-            except Exception as e:
-                erro_str = str(e)
-                # Se for erro 503 / sobrecarga, espera 2 segundos e tenta de novo automaticamente
-                if "503" in erro_str or "unavailable" in erro_str or "overloaded" in erro_str:
-                    if tentativa < 2:
-                        time.sleep(2)
-                        continue
-                resposta_ia = f"Ocorreu um erro ao gerar a resposta: {e}"
+        try:
+            response = client.chat.completions.create(
+                model="gemini-3.6-flash",
+                messages=mensagens_gemini,
+                temperature=0.7,
+            )
+            resposta_ia = response.choices[0].message.content
+        except Exception as e:
+            resposta_ia = f"Ocorreu um erro ao gerar a resposta: {e}"
 
     hora_resposta = datetime.now().strftime("%H:%M")
 
