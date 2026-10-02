@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 from datetime import datetime
 
 # Configuração da página
@@ -8,12 +8,11 @@ st.set_page_config(
     page_icon="💖"
 )
 
-# Configuração do cliente Gemini usando os segredos do Streamlit
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+# Configuração do cliente Groq usando os segredos do Streamlit
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # --- BARRA LATERAL (STATUS, CONTADOR, OPÇÕES E HUMOR) ---
 with st.sidebar:
-    # Status Online
     st.markdown("🟢 **Status:** Online ❤️")
     st.markdown("---")
     
@@ -33,7 +32,6 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("Modo de Humor da Vitória 🥰")
     
-    # Seletor de humor atualizado
     humor_escolhido = st.selectbox(
         "Como ela deve estar hoje?",
         [
@@ -59,12 +57,6 @@ elif "Brava" in humor_escolhido:
     instrucao_humor = "Você se chama Vitória. Você está brava de mentirinha e emburrada com ele, respondendo de forma seca, cruzando os braços e cobrando satisfações por qualquer coisita, mas mantendo o tom divertido e sem estragar a brincadeira. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 else:
     instrucao_humor = "Você se chama Vitória. Você está focada em ser a maior torcedora do usuário, dando conselhos motivacionais, muita força e apoio incondicional. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
-
-# Inicializa o modelo correto recomendado pela API (`gemini-3.8-flash`)
-model = genai.GenerativeModel(
-    model_name="gemini-3.8-flash",
-    system_instruction=instrucao_humor
-)
 
 # Exibe o histórico de mensagens existentes na tela junto com o horário
 for mensagem in st.session_state["lista_mensagens"]:
@@ -97,23 +89,27 @@ if mensage_usuario:
         "horario": hora_atual
     })
 
-    # Prepara o histórico para o formato nativo do Google Gemini SDK
-    gemini_history = []
-    for m in st.session_state["lista_mensagens"][:-1]:
-        r = "user" if m["role"] == "user" else "model"
-        gemini_history.append({"role": r, "parts": [m["content"]]})
+    # Prepara o histórico para o formato da Groq (incluindo o system prompt no início)
+    mensagens_groq = [{"role": "system", "content": instrucao_humor}]
+    for m in st.session_state["lista_mensagens"]:
+        r = "user" if m["role"] == "user" else "assistant"
+        mensagens_groq.append({"role": r, "content": m["content"]})
 
     # Indicador de a digitar
     with st.spinner("A Vitória está a digitar... 💭"):
         try:
-            chat = model.start_chat(history=gemini_history)
-            resposta_ia = chat.send_message(mensage_usuario).text
+            chat_completion = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=mensagens_groq,
+                temperature=0.7,
+            )
+            resposta_ia = chat_completion.choices[0].message.content
         except Exception as e:
             resposta_ia = f"Ocorreu um erro ao gerar a resposta: {e}"
 
     hora_resposta = datetime.now().strftime("%H:%M")
 
-    # Exibe a resposta da assistente com a foto dela
+    # Exibe a resposta da assistente
     st.chat_message("assistant", avatar="vitoria.jpg").write(resposta_ia)
     st.caption(f"🕒 {hora_resposta}")
     
