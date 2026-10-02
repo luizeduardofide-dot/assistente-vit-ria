@@ -99,7 +99,7 @@ if mensage_usuario:
     with st.spinner("A Vitória está a digitar... 💭"):
         try:
             chat_completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="openai/gpt-oss-120b",
                 messages=mensagens_groq,
                 temperature=0.7,
             )
