@@ -8,10 +8,10 @@ st.set_page_config(
     page_icon="💖"
 )
 
-# Configuração do cliente OpenRouter usando os segredos do Streamlit
+# Configuração do cliente usando GitHub Models
 client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=st.secrets["OPENROUTER_API_KEY"],
+    base_url="https://models.inference.ai.azure.com",
+    api_key=st.secrets["GITHUB_TOKEN"],
 )
 
 # --- BARRA LATERAL (STATUS, CONTADOR, OPÇÕES E HUMOR) ---
@@ -57,7 +57,7 @@ elif "Empolgada" in humor_escolhido:
 elif "Ciumenta" in humor_escolhido:
     instrucao_humor = "Você se chama Vitória. Você está um pouco ciumenta de brincadeira, cobrando atenção dele de forma fofa e divertida, mas sem deixar de ser carinhosa. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 elif "Brava" in humor_escolhido:
-    instrucao_humor = "You se chama Vitória. Você está brava de mentirinha e emburrada com ele, respondendo de forma seca, cruzando os braços e cobrando satisfações por qualquer coisita, mas mantendo o tom divertido e sem estragar a brincadeira. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
+    instrucao_humor = "Você se chama Vitória. Você está brava de mentirinha e emburrada com ele, respondendo de forma seca, cruzando os braços e cobrando satisfações por qualquer coisita, mas mantendo o tom divertido e sem estragar a brincadeira. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 else:
     instrucao_humor = "Você se chama Vitória. Você está focada em ser a maior torcedora do usuário, dando conselhos motivacionais, muita força e apoio incondicional. Seja natural, fale como se estivesse conversando no WhatsApp. Não utilize emoji em conversas de saudações. Responda em português do Brasil."
 
@@ -92,21 +92,21 @@ if mensage_usuario:
         "horario": hora_atual
     })
 
-    # Prepara o histórico para o formato do OpenRouter (incluindo o system prompt)
-    mensagens_openrouter = [{"role": "system", "content": instrucao_humor}]
+    # Prepara o histórico para o formato do GitHub Models
+    mensagens_gh = [{"role": "system", "content": instrucao_humor}]
     for m in st.session_state["lista_mensagens"]:
         r = "user" if m["role"] == "user" else "assistant"
-        mensagens_openrouter.append({"role": r, "content": m["content"]})
+        mensagens_gh.append({"role": r, "content": m["content"]})
 
     # Indicador de a digitar
     with st.spinner("A Vitória está a digitar... 💭"):
         try:
-            completion = client.chat.completions.create(
-                model="google/gemini-2.0-flash-exp:free",
-                messages=mensagens_openrouter,
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=mensagens_gh,
                 temperature=0.7,
             )
-            resposta_ia = completion.choices[0].message.content
+            resposta_ia = response.choices[0].message.content
         except Exception as e:
             resposta_ia = f"Ocorreu um erro ao gerar a resposta: {e}"
 
