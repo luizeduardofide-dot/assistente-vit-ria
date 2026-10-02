@@ -102,7 +102,7 @@ if mensage_usuario:
     with st.spinner("A Vitória está a digitar... 💭"):
         try:
             response = client.chat.completions.create(
-                model="gemini-2.0-flash",
+                model="gemini-3.8-flash",
                 messages=mensagens_gemini,
                 temperature=0.7,
             )
