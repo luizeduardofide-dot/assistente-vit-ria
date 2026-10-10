@@ -145,16 +145,22 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
-# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS COM CORTE DE MARGENS VAZIAS ---
-def carregar_imagem_padronizada(caminho, tamanho=(600, 600), corta_margens=False):
+# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS COM ZOOM AGRESSIVO PARA FOTO RETANGULAR ---
+def carregar_imagem_padronizada(caminho, tamanho=(600, 600), aplica_zoom_agressivo=False):
     if os.path.exists(caminho):
         img = Image.open(caminho)
         
-        # Se for a foto da TV, corta as paredes e espaços vazios antes de enquadrar
-        if corta_margens:
+        # Se for a foto da TV, vamos aplicar um crop agressivo nas bordas vazias
+        # antes de fazer o redimensionamento para quadrado.
+        if aplica_zoom_agressivo:
             w, h = img.size
-            # Remove 12% das laterais, 22% do topo (parede) e 22% da base (prateleira)
-            img = img.crop((w * 0.12, h * 0.22, w * 0.88, h * 0.78))
+            # Mantém apenas o centro (aprox. 50% da largura e 50% da altura central)
+            # para remover o excesso de parede e prateleira.
+            esquerda = w * 0.15
+            topo = h * 0.20
+            direita = w * 0.85
+            fundo = h * 0.80
+            img = img.crop((esquerda, topo, direita, fundo))
             
         return ImageOps.fit(img, tamanho, method=Image.Resampling.LANCZOS)
     return None
@@ -418,8 +424,8 @@ with aba_premios:
     with col_p1:
         st.subheader("🥇 1º LUGAR")
         st.markdown("**Televisão 43\"**")
-        # Aplica o corte automático das bordas vazias da TV
-        img1 = carregar_imagem_padronizada("premio1.jpeg", corta_margens=True)
+        # Aplica zoom agressivo para focar apenas na TV no centro
+        img1 = carregar_imagem_padronizada("premio1.jpeg", aplica_zoom_agressivo=True)
         if img1:
             st.image(img1, use_container_width=True)
         else:
