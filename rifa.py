@@ -52,7 +52,7 @@ st.markdown("""
         }
     }
     
-    /* --- FAIXA FLUTUANTE FIXA NA TELA (MAIOR E MAIS VISÍVEL) --- */
+    /* --- FAIXA FLUTUANTE FIXA NA TELA --- */
     .banner-flutuante {
         position: fixed;
         bottom: 20px;
@@ -145,20 +145,16 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
-# --- FUNÇÃO PARA PADRONIZAR IMAGENS COM SUPORTE A ZOOM AUTOMÁTICO ---
-def carregar_imagem_padronizada(caminho, tamanho=(600, 600), zoom=1.0):
+# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS COM CORTE DE MARGENS VAZIAS ---
+def carregar_imagem_padronizada(caminho, tamanho=(600, 600), corta_margens=False):
     if os.path.exists(caminho):
         img = Image.open(caminho)
-        # Se um fator de zoom for especificado (> 1.0), aproxima a imagem no centro
-        if zoom > 1.0:
+        
+        # Se for a foto da TV, corta as paredes e espaços vazios antes de enquadrar
+        if corta_margens:
             w, h = img.size
-            novo_w = w / zoom
-            novo_h = h / zoom
-            esquerda = (w - novo_w) / 2
-            topo = (h - novo_h) / 2
-            direita = (w + novo_w) / 2
-            fundo = (h + novo_h) / 2
-            img = img.crop((esquerda, topo, direita, fundo))
+            # Remove 12% das laterais, 22% do topo (parede) e 22% da base (prateleira)
+            img = img.crop((w * 0.12, h * 0.22, w * 0.88, h * 0.78))
             
         return ImageOps.fit(img, tamanho, method=Image.Resampling.LANCZOS)
     return None
@@ -422,8 +418,8 @@ with aba_premios:
     with col_p1:
         st.subheader("🥇 1º LUGAR")
         st.markdown("**Televisão 43\"**")
-        # Aplica zoom de 1.4x para aproximar e focar na TV
-        img1 = carregar_imagem_padronizada("premio1.jpeg", zoom=1.4)
+        # Aplica o corte automático das bordas vazias da TV
+        img1 = carregar_imagem_padronizada("premio1.jpeg", corta_margens=True)
         if img1:
             st.image(img1, use_container_width=True)
         else:
