@@ -43,9 +43,9 @@ st.markdown("""
 
     img { border-radius: 15px; }
     
-    /* --- CORREÇÃO DA LOGO NO MOBILE --- */
+    /* --- CORREÇÃO ESPECÍFICA APENAS DA LOGO NO MOBILE --- */
     @media (max-width: 768px) {
-        div[data-testid="stColumn"]:first-child img {
+        .logo-container img {
             max-width: 80px !important;
             margin: 0 auto;
             display: block;
@@ -145,23 +145,10 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
-# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS COM ZOOM AGRESSIVO PARA FOTO RETANGULAR ---
-def carregar_imagem_padronizada(caminho, tamanho=(600, 600), aplica_zoom_agressivo=False):
+# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS EM TAMANHO QUADRADO (1:1) ---
+def carregar_imagem_padronizada(caminho, tamanho=(600, 600)):
     if os.path.exists(caminho):
         img = Image.open(caminho)
-        
-        # Se for a foto da TV, vamos aplicar um crop agressivo nas bordas vazias
-        # antes de fazer o redimensionamento para quadrado.
-        if aplica_zoom_agressivo:
-            w, h = img.size
-            # Mantém apenas o centro (aprox. 50% da largura e 50% da altura central)
-            # para remover o excesso de parede e prateleira.
-            esquerda = w * 0.15
-            topo = h * 0.20
-            direita = w * 0.85
-            fundo = h * 0.80
-            img = img.crop((esquerda, topo, direita, fundo))
-            
         return ImageOps.fit(img, tamanho, method=Image.Resampling.LANCZOS)
     return None
 
@@ -243,7 +230,9 @@ col_logo, col_titulo = st.columns([1, 3], vertical_alignment="center")
 
 with col_logo:
     if os.path.exists("fotologo.jpeg"):
+        st.markdown('<div class="logo-container">', unsafe_allow_html=True)
         st.image("fotologo.jpeg", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 with col_titulo:
     st.markdown("<h2 style='margin: 0; padding: 0; font-size: 1.8rem; font-weight: 800;'>Rifa - Equipe Zeus</h2>", unsafe_allow_html=True)
@@ -424,8 +413,7 @@ with aba_premios:
     with col_p1:
         st.subheader("🥇 1º LUGAR")
         st.markdown("**Televisão 43\"**")
-        # Aplica zoom agressivo para focar apenas na TV no centro
-        img1 = carregar_imagem_padronizada("premio1.jpeg", aplica_zoom_agressivo=True)
+        img1 = carregar_imagem_padronizada("premio1.jpeg")
         if img1:
             st.image(img1, use_container_width=True)
         else:
